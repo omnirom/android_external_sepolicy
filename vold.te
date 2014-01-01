@@ -30,6 +30,12 @@ allow vold domain:{ file lnk_file } r_file_perms;
 allow vold domain:process { signal sigkill };
 allow vold self:capability { sys_ptrace kill };
 
+# Allow vold to access fuse for fuse-based fs
+allow vold fuse_device:chr_file rw_file_perms;
+
+# NTFS-3g wants to drop permission
+allow vold self:capability { setgid setuid };
+
 # For blkid
 allow vold shell_exec:file rx_file_perms;
 
