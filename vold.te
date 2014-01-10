@@ -33,6 +33,10 @@ allow vold self:capability { sys_ptrace kill };
 # For blkid
 allow vold shell_exec:file rx_file_perms;
 
+# Allow vold to relabel sdcard fs mounts
+allow vold unlabeled:filesystem { relabelfrom };
+allow vold sdcard_external:filesystem { relabelfrom relabelto };
+
 # XXX Label sysfs files with a specific type?
 allow vold sysfs:file rw_file_perms;
 
