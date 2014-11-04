@@ -19,7 +19,7 @@ allow vold tmpfs:filesystem { mount unmount };
 allow vold tmpfs:dir create_dir_perms;
 allow vold tmpfs:dir mounton;
 allow vold self:capability { net_admin dac_override mknod sys_admin chown fowner fsetid };
-allow vold self:netlink_kobject_uevent_socket *;
+allow vold self:netlink_kobject_uevent_socket create_socket_perms;
 allow vold app_data_file:dir search;
 allow vold app_data_file:file rw_file_perms;
 allow vold loop_device:blk_file rw_file_perms;
@@ -38,6 +38,10 @@ allow vold sysfs:file rw_file_perms;
 
 write_klog(vold)
 
+# Log fsck results
+allow vold fscklogs:dir rw_dir_perms;
+allow vold fscklogs:file create_file_perms;
+
 #
 # Rules to support encrypted fs support.
 #
@@ -54,7 +58,6 @@ allow vold efs_file:file rw_file_perms;
 
 # Create and mount on /data/tmp_mnt.
 allow vold system_data_file:dir { create rw_dir_perms mounton };
-allow vold system_data_file:file create_file_perms;
 
 # Set scheduling policy of kernel processes
 allow vold kernel:process setsched;
@@ -62,13 +65,27 @@ allow vold kernel:process setsched;
 # Property Service
 allow vold vold_prop:property_service set;
 allow vold powerctl_prop:property_service set;
-allow vold ctl_default_prop:property_service set;
+allow vold ctl_fuse_prop:property_service set;
 
 # ASEC
 allow vold asec_image_file:file create_file_perms;
 allow vold asec_image_file:dir rw_dir_perms;
 security_access_policy(vold)
-allow vold asec_apk_file:dir { rw_dir_perms setattr };
-allow vold asec_apk_file:file { r_file_perms setattr };
-allow vold sdcard_external:dir create_dir_perms;
-allow vold sdcard_external:file create_file_perms;
+allow vold asec_apk_file:dir { rw_dir_perms setattr relabelfrom relabelto };
+allow vold asec_public_file:dir { relabelto setattr };
+allow vold asec_apk_file:file { r_file_perms setattr relabelfrom relabelto };
+allow vold asec_public_file:file { relabelto setattr };
+# restorecon files in asec containers created on 4.2 or earlier.
+allow vold unlabeled:dir { r_dir_perms setattr relabelfrom };
+allow vold unlabeled:file { r_file_perms setattr relabelfrom };
+
+# Handle wake locks (used for device encryption)
+wakelock_use(vold)
+
+# talk to batteryservice
+binder_use(vold)
+binder_call(vold, healthd)
+
+# talk to keymaster
+allow vold tee_device:chr_file rw_file_perms;
+

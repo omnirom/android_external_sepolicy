@@ -10,14 +10,11 @@
 ###
 
 type isolated_app, domain;
-permissive isolated_app;
 app_domain(isolated_app)
+net_domain(isolated_app)
 
-# Appdomain interaction with isolated apps
-r_dir_file(appdomain, isolated_app)
-
-# Already connected, unnamed sockets being passed over some other IPC
-# hence no sock_file or connectto permission. This appears to be how
-# Chrome works, may need to be updated as more apps using isolated services
-# are examined.
-allow isolated_app appdomain:unix_stream_socket { read write };
+# read and write access to app_data_file is already
+# granted via app.te. Allow execute.
+# Needed to allow dlopen() from Chrome renderer processes.
+# See b/15902433 for details.
+allow isolated_app app_data_file:file execute;

@@ -11,6 +11,9 @@ attribute domain;
 # All types used for filesystems.
 attribute fs_type;
 
+# All types used for context= mounts.
+attribute contextmount_type;
+
 # All types used for files that can exist on a labeled fs.
 # Do not use for pseudo file types.
 attribute file_type;
@@ -39,6 +42,9 @@ attribute port_type;
 # All types used for property service
 attribute property_type;
 
+# All types used for services managed by service_manager.
+attribute service_manager_type;
+
 # All domains that can override MLS restrictions.
 # i.e. processes that can read up and write down.
 attribute mlstrustedsubject;
@@ -61,9 +67,3 @@ attribute bluetoothdomain;
 
 # All domains used for binder service domains.
 attribute binderservicedomain;
-
-# Allow domains used for platform (signed by build key) apps.
-attribute platformappdomain;
-
-# All domains which are allowed the "relabelto" permission
-attribute relabeltodomain;

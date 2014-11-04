@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <search.h>
+#include <stdbool.h>
 #include <sepol/sepol.h>
 #include <sepol/policydb/policydb.h>
 
@@ -100,9 +101,8 @@ struct kvp {
  */
 struct rule_map {
 	char *key; /** key value before hashing */
-	int length; /** length of the key map */
+	size_t length; /** length of the key map */
 	int lineno; /** Line number rule was encounter on */
-	rule_map *next; /** next pointer used in hash table for chaining on collision */
 	key_map m[]; /** key value mapping */
 };
 
@@ -160,6 +160,7 @@ key_map rules[] = {
                 { .name = "user",           .type = dt_string, .dir = dir_in,  .data = NULL },
                 { .name = "seinfo",         .type = dt_string, .dir = dir_in,  .data = NULL },
                 { .name = "name",           .type = dt_string, .dir = dir_in,  .data = NULL },
+                { .name = "path",           .type = dt_string, .dir = dir_in,  .data = NULL },
                 { .name = "sebool",         .type = dt_string, .dir = dir_in,  .data = NULL },
                 /*Outputs*/
                 { .name = "domain",         .type = dt_string, .dir = dir_out, .data = NULL },
@@ -341,7 +342,7 @@ out:
  */
 static void rule_map_print(FILE *fp, rule_map *r) {
 
-	int i;
+	size_t i;
 	key_map *m;
 
 	for (i = 0; i < r->length; i++) {
@@ -364,12 +365,12 @@ static void rule_map_print(FILE *fp, rule_map *r) {
  */
 static map_match rule_map_cmp(rule_map *rmA, rule_map *rmB) {
 
-	int i;
-	int j;
+	size_t i;
+	size_t j;
 	int inputs_found = 0;
 	int num_of_matched_inputs = 0;
 	int input_mode = 0;
-	int matches = 0;
+	size_t matches = 0;
 	key_map *mA;
 	key_map *mB;
 
@@ -436,10 +437,11 @@ static map_match rule_map_cmp(rule_map *rmA, rule_map *rmB) {
  * @param rm
  * 	rule map to be freed.
  */
-static void rule_map_free(rule_map *rm, rule_map_switch s) {
+static void rule_map_free(rule_map *rm,
+		rule_map_switch s __attribute__((unused)) /* only glibc builds, ignored otherwise */) {
 
-	int i;
-	int len = rm->length;
+	size_t i;
+	size_t len = rm->length;
 	for (i = 0; i < len; i++) {
 		key_map *m = &(rm->m[i]);
 		free(m->data);
@@ -460,6 +462,46 @@ static void free_kvp(kvp *k) {
 }
 
 /**
+ * Checks a rule_map for any variation of KVP's that shouldn't be allowed.
+ * Note that this function logs all errors.
+ *
+ * Current Checks:
+ * 1. That a specified name entry should have a specified seinfo entry as well.
+ * @param rm
+ *  The rule map to check for validity.
+ * @return
+ *  true if the rule is valid, false otherwise.
+ */
+static bool rule_map_validate(const rule_map *rm) {
+
+	size_t i;
+	bool found_name = false;
+	bool found_seinfo = false;
+	char *name = NULL;
+	const key_map *tmp;
+
+	for(i=0; i < rm->length; i++) {
+		tmp = &(rm->m[i]);
+
+		if(!strcmp(tmp->name, "name") && tmp->data) {
+			name = tmp->data;
+			found_name = true;
+		}
+		if(!strcmp(tmp->name, "seinfo") && tmp->data && strcmp(tmp->data, "default")) {
+			found_seinfo = true;
+		}
+	}
+
+	if(found_name && !found_seinfo) {
+		log_error("No specific seinfo value specified with name=\"%s\", on line: %d:  insecure configuration!\n",
+				name, rm->lineno);
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * Given a set of key value pairs, this will construct a new rule map.
  * On error this function calls exit.
  * @param keys
@@ -471,9 +513,10 @@ static void free_kvp(kvp *k) {
  * @return
  * 	A rule map pointer.
  */
-static rule_map *rule_map_new(kvp keys[], unsigned int num_of_keys, int lineno) {
+static rule_map *rule_map_new(kvp keys[], size_t num_of_keys, int lineno) {
 
-	unsigned int i = 0, j = 0;
+	size_t i = 0, j = 0;
+	bool valid_rule;
 	rule_map *new_map = NULL;
 	kvp *k = NULL;
 	key_map *r = NULL, *x = NULL;
@@ -544,6 +587,12 @@ static rule_map *rule_map_new(kvp keys[], unsigned int num_of_keys, int lineno) 
 
 	if (new_map->key == NULL) {
 		log_error("Strange, no keys found, input file corrupt perhaps?\n");
+		goto err;
+	}
+
+	valid_rule = rule_map_validate(new_map);
+	if(!valid_rule) {
+		/* Error message logged from rule_map_validate() */
 		goto err;
 	}
 
@@ -871,7 +920,7 @@ static void parse() {
 	char *p, *name = NULL, *value = NULL, *saveptr;
 	size_t len;
 	kvp keys[KVP_NUM_OF_RULES];
-	int token_cnt = 0;
+	size_t token_cnt = 0;
 
 	while (fgets(line_buf, sizeof line_buf - 1, input_file)) {
 

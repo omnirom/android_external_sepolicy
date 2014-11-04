@@ -3,23 +3,27 @@ type netd, domain;
 type netd_exec, exec_type, file_type;
 
 init_daemon_domain(netd)
-allow netd self:capability { net_admin net_raw kill fsetid };
-allow netd self:netlink_kobject_uevent_socket *;
-allow netd self:netlink_route_socket *;
-allow netd self:netlink_nflog_socket *;
-allow netd self:rawip_socket *;
-allow netd self:{ tcp_socket udp_socket } *;
-allow netd node:{ tcp_socket udp_socket } node_bind;
-allow netd port:{ tcp_socket udp_socket } name_bind;
-allow netd port:tcp_socket name_connect;
-allow netd self:unix_stream_socket *;
+net_domain(netd)
+
+allow netd self:capability { net_admin net_raw kill };
+# Note: fsetid is deliberately not included above. fsetid checks are
+# triggered by chmod on a directory or file owned by a group other
+# than one of the groups assigned to the current process to see if
+# the setgid bit should be cleared, regardless of whether the setgid
+# bit was even set.  We do not appear to truly need this capability
+# for netd to operate.  Uncomment the dontaudit rule below after
+# sufficient testing of the fsetid removal.
+# dontaudit netd self:capability fsetid;
+
+allow netd self:netlink_kobject_uevent_socket create_socket_perms;
+allow netd self:netlink_route_socket nlmsg_write;
+allow netd self:netlink_nflog_socket create_socket_perms;
 allow netd shell_exec:file rx_file_perms;
 allow netd system_file:file x_file_perms;
 allow netd devpts:chr_file rw_file_perms;
 
 # For /proc/sys/net/ipv[46]/route/flush.
-# XXX Split /proc/sys/net into its own type.
-allow netd proc:file write;
+allow netd proc_net:file write;
 
 # For /sys/modules/bcmdhd/parameters/firmware_path
 # XXX Split into its own type.
@@ -27,7 +31,9 @@ allow netd sysfs:file write;
 
 # Set dhcp lease for PAN connection
 unix_socket_connect(netd, property, init)
+allow netd dhcp_prop:property_service set;
 allow netd system_prop:property_service set;
+auditallow netd system_prop:property_service set;
 
 # Connect to PAN
 domain_auto_trans(netd, dhcp_exec, dhcp)
@@ -39,6 +45,10 @@ allow netd dhcp:process signal;
 allow netd self:capability { dac_override chown fowner };
 allow netd wifi_data_file:file create_file_perms;
 allow netd wifi_data_file:dir rw_dir_perms;
+
+# Needed to update /data/misc/net/rt_tables
+allow netd net_data_file:file create_file_perms;
+allow netd net_data_file:dir rw_dir_perms;
 
 # Allow netd to spawn hostapd in it's own domain
 domain_auto_trans(netd, hostapd_exec, hostapd)
@@ -52,10 +62,11 @@ allow netd dnsmasq:process signal;
 domain_auto_trans(netd, clatd_exec, clatd)
 allow netd clatd:process signal;
 
-# Support netd running mdnsd
-# TODO: prune this back further
-allow netd ctl_default_prop:property_service set;
-allow netd device:sock_file write;
+allow netd ctl_mdnsd_prop:property_service set;
+
+# Allow netd to operate on sockets that are passed to it.
+allow netd netdomain:{tcp_socket udp_socket rawip_socket dccp_socket tun_socket} {read write getattr setattr getopt setopt};
+allow netd netdomain:fd use;
 
 ###
 ### Neverallow rules
@@ -64,16 +75,6 @@ allow netd device:sock_file write;
 
 # Block device access.
 neverallow netd dev_type:blk_file { read write };
-
-# Kernel memory access.
-neverallow netd kmem_device:chr_file { read write };
-
-# Setting SELinux enforcing status or booleans.
-# Conditionally allowed to system_app for SEAndroidManager.
-neverallow netd kernel:security { setenforce setbool };
-
-# Load security policy.
-neverallow netd kernel:security load_policy;
 
 # ptrace any other app
 neverallow netd { domain }:process ptrace;

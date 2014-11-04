@@ -3,7 +3,7 @@ Policy Generation:
 Additional, per device, policy files can be added into the
 policy build.
 
-They can be configured through the use of three variables,
+They can be configured through the use of four variables,
 they are:
 1. BOARD_SEPOLICY_REPLACE
 2. BOARD_SEPOLICY_UNION
@@ -24,7 +24,7 @@ used instead of the corresponding file in external/sepolicy.
 BOARD_SEPOLICY_DIRS contains a list of directories to search
 for BOARD_SEPOLICY_UNION and BOARD_SEPOLICY_REPLACE files. Order
 matters in this list.
-eg.) If you have BOARD_SEPOLICY_UNION := widget.te and have 2
+eg.) If you have BOARD_SEPOLICY_UNION += widget.te and have 2
 instances of widget.te files on BOARD_SEPOLICY_DIRS search path.
 The first one found (at the first search dir containing the file)
 gets processed first.
@@ -49,6 +49,9 @@ BOARD_POLICY_REPLACE and BOARD_POLICY_UNION.
 It is an error to specify a BOARD_SEPOLICY_DIRS that has no entries when
 specifying BOARD_SEPOLICY_REPLACE.
 
+It is an error to specify a BOARD_POLICY_UNION file that
+doesn't appear in any of the BOARD_SEPOLICY_DIRS locations.
+
 BOARD_SEPOLICY_IGNORE is a list of paths (directory + filename) of
 files that are not to be included in the resulting policy. This list
 is passed to filter-out to remove any paths you may want to ignore. This
@@ -56,9 +59,9 @@ is useful if you have numerous config directories that contain a file
 and you want to NOT include a particular file in your resulting
 policy file, either by UNION or REPLACE.
 Eg.) Suppose the following:
-     BOARD_SEPOLICY_DIRS := X Y
-     BOARD_SEPOLICY_REPLACE := A
-     BOARD_SEPOLICY_IGNORE := X/A
+     BOARD_SEPOLICY_DIRS += X Y
+     BOARD_SEPOLICY_REPLACE += A
+     BOARD_SEPOLICY_IGNORE += X/A
 
      Directories X and Y contain A.
 
@@ -68,10 +71,10 @@ Eg.) Suppose the following:
 Example BoardConfig.mk Usage:
 From the Tuna device BoardConfig.mk, device/samsung/tuna/BoardConfig.mk
 
-BOARD_SEPOLICY_DIRS := \
+BOARD_SEPOLICY_DIRS += \
         device/samsung/tuna/sepolicy
 
-BOARD_SEPOLICY_UNION := \
+BOARD_SEPOLICY_UNION += \
         genfs_contexts \
         file_contexts \
         sepolicy.te
@@ -114,7 +117,20 @@ mac_permissions.xml:
         any string specified in TARGET_BUILD_VARIANT. All tags are matched verbatim
         and all options are matched lowercase. The options are "tolowered" automatically
         for the user, it is convention to specify tags and options in all uppercase
-        and tags start with @.
+        and tags start with @. The option arguments can also use environment variables
+        via the familiar $VARIABLE syntax. This is often useful for setting a location
+        to ones release keys.
+
+        Often times, one will need to integrate an application that was signed by a separate
+        organization and may need to extract the pem file for the insertkeys/keys.conf tools.
+        Extraction of the public key in the pem format is possible via openssl. First you need
+        to unzip the apk, once it is unzipped, cd into the META_INF directory and then execute
+        openssl pkcs7 -inform DER -in CERT.RSA -out CERT.pem -outform PEM  -print_certs
+        On some occasions CERT.RSA has a different name, and you will need to adjust for that.
+        After extracting the pem, you can rename it, and configure keys.conf and
+        mac_permissions.xml to pick up the change. You MUST open the generated pem file in a text
+        editor and strip out anything outside the opening and closing scissor lines. Failure to do
+        so WILL cause a compile time issue thrown by insertkeys.py
 
         NOTE: The pem files are base64 encoded and PackageManagerService, mac_permissions.xml
               and setool all use base16 encodings.
