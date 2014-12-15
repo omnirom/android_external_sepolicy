@@ -52,6 +52,9 @@ allow init security_prop:property_service set;
 r_dir_file(init, security_file)
 allow init kernel:security load_policy;
 
+# Allow init to setenforce 0
+allow init kernel:security setenforce;
+
 # Any operation that can modify the kernel ring buffer, e.g. clear
 # or a read that consumes the messages that were read.
 allow init kernel:system syslog_mod;
