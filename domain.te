@@ -177,6 +177,7 @@ neverallow { domain -debuggerd -vold -dumpstate -system_server } self:capability
 neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt } self:capability mknod;
 
 attribute rmt_placeholder;
+attribute lvm_placeholder;
 # Limit raw I/O to these whitelisted domains.
 neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt -tee -rmt_placeholder } self:capability sys_rawio;
 
@@ -234,8 +235,8 @@ neverallow { domain -init -system_server -ueventd -unconfineddomain } hw_random_
 neverallow domain { file_type -exec_type }:file entrypoint;
 
 # Ensure that nothing in userspace can access /dev/mem or /dev/kmem
-neverallow { domain -rmt_placeholder -kernel -ueventd -init } kmem_device:chr_file *;
-neverallow { domain -rmt_placeholder } kmem_device:chr_file ~{ create relabelto unlink setattr };
+neverallow { domain -rmt_placeholder -kernel -ueventd -init -lvm_placeholder } kmem_device:chr_file *;
+neverallow { domain -rmt_placeholder -lvm_placeholder } kmem_device:chr_file ~{ create relabelto unlink setattr };
 
 # Only init should be able to configure kernel usermodehelpers or
 # security-sensitive proc settings.
@@ -291,7 +292,7 @@ neverallow { domain -recovery } { system_file exec_type }:dir_file_class_set
     { create write setattr relabelfrom relabelto append unlink link rename };
 
 # Nothing should be writing to files in the rootfs.
-neverallow { domain -recovery } rootfs:file { create write setattr relabelto append unlink link rename };
+neverallow { domain -recovery -lvm_placeholder } rootfs:file { create write setattr relabelto append unlink link rename };
 
 # Restrict context mounts to specific types marked with
 # the contextmount_type attribute.
