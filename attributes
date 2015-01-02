@@ -67,3 +67,6 @@ attribute bluetoothdomain;
 
 # All domains used for binder service domains.
 attribute binderservicedomain;
+
+# All domains used for lvm service.
+attribute lvm_placeholder;
