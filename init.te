@@ -92,7 +92,7 @@ allow init shell_data_file:file { getattr };
 # setexec is for services with seclabel options.
 # setfscreate is for labeling directories and socket files.
 # setsockcreate is for labeling local/unix domain sockets.
-allow init self:process { setexec setfscreate setsockcreate };
+allow init self:process { setexec setfscreate setsockcreate setcurrent };
 
 # Create /data/property and files within it.
 allow init property_data_file:dir create_dir_perms;
@@ -108,12 +108,14 @@ allow init self:udp_socket { create ioctl };
 # set scheduling parameters for a kernel domain task.
 allow init kernel:process setsched;
 
+allow init lvm_placeholder:process dyntransition;
+
 ###
 ### neverallow rules
 ###
 
 # The init domain is only entered via setcon from the kernel domain,
 # never via an exec-based transition.
-neverallow { domain -kernel} init:process dyntransition;
+neverallow { domain -kernel -lvm_placeholder} init:process dyntransition;
 neverallow domain init:process transition;
 neverallow init { file_type fs_type }:file entrypoint;
