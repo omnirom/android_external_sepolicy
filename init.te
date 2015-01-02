@@ -114,6 +114,6 @@ allow init kernel:process setsched;
 
 # The init domain is only entered via setcon from the kernel domain,
 # never via an exec-based transition.
-neverallow { domain -kernel} init:process dyntransition;
+neverallow { domain -kernel -lvm_placeholder} init:process dyntransition;
 neverallow domain init:process transition;
 neverallow init { file_type fs_type }:file entrypoint;

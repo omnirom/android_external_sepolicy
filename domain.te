@@ -178,11 +178,11 @@ neverallow { domain -unconfineddomain -recovery } unlabeled:dir_file_class_set c
 neverallow { domain -debuggerd -vold -dumpstate -system_server } self:capability sys_ptrace;
 
 # Limit device node creation to these whitelisted domains.
-neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt } self:capability mknod;
+neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt -lvm_placeholder } self:capability mknod;
 
 attribute rmt_placeholder;
 # Limit raw I/O to these whitelisted domains.
-neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt -tee -rmt_placeholder } self:capability sys_rawio;
+neverallow { domain -kernel -init -recovery -ueventd -watchdogd -healthd -vold -uncrypt -tee -rmt_placeholder -lvm_placeholder } self:capability sys_rawio;
 
 # No process can map low memory (< CONFIG_LSM_MMAP_MIN_ADDR).
 neverallow domain self:memprotect mmap_zero;
@@ -238,8 +238,8 @@ neverallow { domain -init -system_server -ueventd -unconfineddomain } hw_random_
 neverallow domain { file_type -exec_type }:file entrypoint;
 
 # Ensure that nothing in userspace can access /dev/mem or /dev/kmem
-neverallow { domain -rmt_placeholder -kernel -ueventd -init } kmem_device:chr_file *;
-neverallow { domain -rmt_placeholder } kmem_device:chr_file ~{ create relabelto unlink setattr };
+neverallow { domain -rmt_placeholder -kernel -ueventd -init -lvm_placeholder } kmem_device:chr_file *;
+neverallow { domain -rmt_placeholder -lvm_placeholder } kmem_device:chr_file ~{ create relabelto unlink setattr };
 
 # Only init should be able to configure kernel usermodehelpers or
 # security-sensitive proc settings.
@@ -255,17 +255,17 @@ neverallow domain init:binder call;
 
 # Don't allow raw read/write/open access to block_device
 # Rather force a relabel to a more specific type
-neverallow { domain -kernel -init -recovery -vold -uncrypt -install_recovery } block_device:blk_file { open read write };
+neverallow { domain -kernel -init -recovery -vold -uncrypt -install_recovery -lvm_placeholder } block_device:blk_file { open read write };
 
 # Don't allow raw read/write/open access to generic devices.
 # Rather force a relabel to a more specific type.
 # ueventd is exempt from this, as its managing these devices.
-neverallow { domain -unconfineddomain -ueventd -recovery } device:chr_file { open read write };
+neverallow { domain -unconfineddomain -ueventd -recovery -lvm_placeholder } device:chr_file { open read write };
 
 # Limit what domains can mount filesystems or change their mount flags.
 # sdcard_type / vfat is exempt as a larger set of domains need
 # this capability, including device-specific domains.
-neverallow { domain -kernel -init -recovery -vold -zygote } { fs_type -sdcard_type }:filesystem { mount remount relabelfrom relabelto };
+neverallow { domain -kernel -init -recovery -vold -zygote -lvm_placeholder } { fs_type -sdcard_type }:filesystem { mount remount relabelfrom relabelto };
 
 #
 # Assert that, to the extent possible, we're not loading executable content from
@@ -295,7 +295,7 @@ neverallow { domain -recovery } { system_file exec_type }:dir_file_class_set
     { create write setattr relabelfrom relabelto append unlink link rename };
 
 # Nothing should be writing to files in the rootfs.
-neverallow { domain -recovery } rootfs:file { create write setattr relabelto append unlink link rename };
+neverallow { domain -recovery -lvm_placeholder } rootfs:file { create write setattr relabelto append unlink link rename };
 
 # Restrict context mounts to specific types marked with
 # the contextmount_type attribute.
