@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b22818b_fc38dfec",
+        "filename": "init.te",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000515
+      },
+      "writtenOn": "2015-03-18T02:35:43Z",
+      "side": 1,
+      "message": "it breaks for non lvm devices.",
+      "range": {
+        "startLine": 117,
+        "startChar": 29,
+        "endLine": 117,
+        "endChar": 44
+      },
+      "revId": "5d53ef5dbdf8b7d4608cfd720f376a6e2532035f",
+      "serverId": "56841c99-7c94-43d4-bf0b-cb4707e66d55",
+      "unresolved": false
+    }
+  ]
+}
