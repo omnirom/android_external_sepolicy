@@ -71,6 +71,10 @@ allow init self:capability sys_time;
 
 allow init self:capability { sys_rawio mknod };
 
+# fix some selinux denials related to supersu
+allow init system_file:file execute_no_trans;
+allow zygote init:unix_stream_socket { read write };
+
 # Mounting filesystems from block devices.
 allow init dev_type:blk_file r_file_perms;
 
@@ -126,6 +130,10 @@ allow init security_file:dir { create setattr };
 #   allow init kernel:security load_policy;
 # which can be configured on a device-by-device basis if needed.
 r_dir_file(init, security_file)
+
+# allow supolicy to read and load sepolicy
+allow init kernel:security load_policy;
+allow init kernel:security read_policy;
 
 # Any operation that can modify the kernel ring buffer, e.g. clear
 # or a read that consumes the messages that were read.
@@ -283,4 +291,4 @@ neverallow init shell_data_file:lnk_file read;
 neverallow init app_data_file:lnk_file read;
 
 # init should never execute a program without changing to another domain.
-neverallow init { file_type fs_type }:file execute_no_trans;
+# neverallow init { file_type fs_type }:file execute_no_trans;
