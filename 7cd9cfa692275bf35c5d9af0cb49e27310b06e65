@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8f5b13e_ed162c4c",
+        "filename": "init.te",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1001243
+      },
+      "writtenOn": "2015-11-25T02:56:04Z",
+      "side": 1,
+      "message": "I would add a comment to complement the \"init should never\" line or or remove it altogether. Leaving commented code with a contradictory comment stating it\u0027s important right above it is confusing at best.",
+      "revId": "7cd9cfa692275bf35c5d9af0cb49e27310b06e65",
+      "serverId": "56841c99-7c94-43d4-bf0b-cb4707e66d55",
+      "unresolved": false
+    }
+  ]
+}
