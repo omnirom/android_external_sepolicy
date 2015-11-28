@@ -16,6 +16,24 @@
       "revId": "7cd9cfa692275bf35c5d9af0cb49e27310b06e65",
       "serverId": "56841c99-7c94-43d4-bf0b-cb4707e66d55",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f5b13e_b1199edb",
+        "filename": "init.te",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000026
+      },
+      "writtenOn": "2015-11-28T23:46:41Z",
+      "side": 1,
+      "message": "killing that neverallow is anyway a no-go for the moment",
+      "parentUuid": "b8f5b13e_ed162c4c",
+      "revId": "7cd9cfa692275bf35c5d9af0cb49e27310b06e65",
+      "serverId": "56841c99-7c94-43d4-bf0b-cb4707e66d55",
+      "unresolved": false
     }
   ]
 }
