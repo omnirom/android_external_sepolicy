@@ -34,6 +34,11 @@ allow vold sdcard_type:dir mounton; # TODO: deprecated in M
 allow vold sdcard_type:filesystem { mount remount unmount }; # TODO: deprecated in M
 allow vold sdcard_type:dir create_dir_perms; # TODO: deprecated in M
 allow vold sdcard_type:file create_file_perms; # TODO: deprecated in M
+# Omni addition
+ifelse(shipping_build, `true', ,
+  allow vold sdcard_posix:filesystem { relabelto relabelfrom };
+)
+allow vold labeledfs:filesystem { relabelfrom };
 
 # Manage locations where storage is mounted
 allow vold { mnt_media_rw_file storage_file sdcard_type }:dir create_dir_perms;
