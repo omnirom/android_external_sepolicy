@@ -76,3 +76,6 @@ attribute binderservicedomain;
 
 # All domains used for lvm service.
 attribute lvm_placeholder;
+
+# All domains used for tad service.
+attribute tad_placeholder;
