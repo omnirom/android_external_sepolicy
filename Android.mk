@@ -55,6 +55,12 @@ LOCAL_MODULE_PATH := $(TARGET_ROOT_OUT)
 
 include $(BUILD_SYSTEM)/base_rules.mk
 
+ifeq ($(TARGET_BUILD_VARIANT),user)
+SHIPPING_BUILD := true
+else
+SHIPPING_BUILD := false
+endif
+
 sepolicy_policy.conf := $(intermediates)/policy.conf
 $(sepolicy_policy.conf): PRIVATE_MLS_SENS := $(MLS_SENS)
 $(sepolicy_policy.conf): PRIVATE_MLS_CATS := $(MLS_CATS)
@@ -62,6 +68,7 @@ $(sepolicy_policy.conf) : $(call build_policy, $(sepolicy_build_files))
 	@mkdir -p $(dir $@)
 	$(hide) m4 -D mls_num_sens=$(PRIVATE_MLS_SENS) -D mls_num_cats=$(PRIVATE_MLS_CATS) \
 		-D target_build_variant=$(TARGET_BUILD_VARIANT) \
+		-D shipping_build=$(SHIPPING_BUILD) \
 		-s $^ > $@
 	$(hide) sed '/dontaudit/d' $@ > $@.dontaudit
 
