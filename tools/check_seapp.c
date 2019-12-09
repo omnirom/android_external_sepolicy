@@ -737,6 +737,7 @@ static void handle_options(int argc, char *argv[]) {
 						"Unknown option character `\\x%x'.\n",
 						optopt);
 			}
+			break;
 		default:
 			exit(EXIT_FAILURE);
 		}
